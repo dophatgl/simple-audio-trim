@@ -19,8 +19,9 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
-
+    - name: move to mp3trim repo
+      run: cd mp3trim
     - name: Grant execute permission for gradlew
-      run: chmod +x mp3trim/gradlew
+      run: chmod +x gradlew
     - name: Build with Gradle
-      run: ./mp3trim/gradlew build
+      run: ./gradlew build
