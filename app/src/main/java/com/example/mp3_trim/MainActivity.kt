@@ -19,12 +19,14 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -33,14 +35,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import java.io.File
-import java.lang.IllegalArgumentException
 
 
 class MainActivity : AppCompatActivity() {
 
     //UI Views
 
-    private companion object{
+    private companion object {
         //PERMISSION request constant, assign any value
         private const val TAG = "PERMISSION_TAG"
         private const val PICK_AUDIO_FILE_CODE = 101
@@ -57,11 +58,25 @@ class MainActivity : AppCompatActivity() {
         //init UI Views
         val checkboxPermission = findViewById<CheckBox>(R.id.checkbox_permission)
         val buttonChooseAudio = findViewById<Button>(R.id.button_choose_audio)
-        val edittextStartTime = findViewById<EditText>(R.id.edittext_start_time)
-        val edittextEndTime = findViewById<EditText>(R.id.edittext_end_time)
         val buttonStart = findViewById<Button>(R.id.button_start)
         val progressBar = findViewById<ProgressBar>(R.id.progress_bar)
+        val itemContainer = findViewById<LinearLayout>(R.id.itemContainer)
+        val addItemButton = findViewById<Button>(R.id.addItemButton)
+        addItemButton.setOnClickListener {
+            val inflater = LayoutInflater.from(this)
+            val itemView = inflater.inflate(R.layout.list_item, itemContainer, false)
 
+            // Find the remove button within the newly inflated item view
+            val removeButton = itemView.findViewById<Button>(R.id.removeItemButton)
+
+            // Set the click listener for the remove button
+            removeButton.setOnClickListener {
+                // Remove the item view from the container
+                itemContainer.removeView(itemView)
+            }
+            itemContainer.addView(itemView)
+            print("add ")
+        }
         // Check if the permission is already granted and update the checkbox
         if (checkPermission()) {
             checkboxPermission.isChecked = true
@@ -78,32 +93,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Start trimming process
-        buttonStart.setOnClickListener {
-            val startTime = edittextStartTime.text.toString()
-            val endTime = edittextEndTime.text.toString()
 
-            if (selectedFilePath != null && startTime.isNotEmpty() && endTime.isNotEmpty()) {
+        buttonStart.setOnClickListener {
+            val requests = ArrayList<TrimRequest>()
+            for (i in 0 until itemContainer.childCount) {
+                val itemView = itemContainer.getChildAt(i)
+                val etStartTime = itemView.findViewById<EditText>(R.id.edittext_start_time)
+                val etEndTime = itemView.findViewById<EditText>(R.id.edittext_end_time)
+                val startTime = etStartTime.text.toString()
+                val endTime = etEndTime.text.toString()
+                if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
+                    requests.add(TrimRequest(startTime = startTime, endTime = endTime))
+                }
+            }
+            if (selectedFilePath != null && requests.isNotEmpty()) {
                 // Show loading, disable button
                 progressBar.visibility = View.VISIBLE
                 buttonStart.isEnabled = false
-
-                trimMp3(selectedFilePath!!, startTime, endTime) {
-                    // Hide loading, re-enable button after trim is finished
+                trimMp3List(selectedFilePath!!, requests) {
                     progressBar.visibility = View.GONE
                     buttonStart.isEnabled = true
                 }
             } else {
-                Toast.makeText(this, "Please choose a file and fill in both start and end times", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Please choose a file and fill in both start and end times",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
-    private fun checkPermission(): Boolean{
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+    private fun checkPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //Android is 11(R) or above
             Environment.isExternalStorageManager()
-        }
-        else{
+        } else {
 //            //Android is below 11(R)
 //            val write = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 //            val read = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -114,8 +139,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun requestPermission(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+    private fun requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //Android is 11(R) or above
             try {
                 Log.d(TAG, "requestPermission: try")
@@ -124,16 +149,14 @@ class MainActivity : AppCompatActivity() {
                 val uri = Uri.fromParts("package", this.packageName, null)
                 intent.data = uri
                 storageActivityResultLauncher.launch(intent)
-            }
-            catch (e: Exception){
+            } catch (e: Exception) {
                 Log.e(TAG, "requestPermission: ", e)
                 val intent = Intent()
                 intent.action = Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
                 storageActivityResultLauncher.launch(intent)
 
             }
-        }
-        else{
+        } else {
             //Android is below 11(R)
 //            ActivityCompat.requestPermissions(this,
 //                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE),
@@ -143,24 +166,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val storageActivityResultLauncher = this.registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()){
+        ActivityResultContracts.StartActivityForResult()
+    ) {
         Log.d(TAG, "storageActivityResultLauncher: ")
         //here we will handle the result of our intent
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //Android is 11(R) or above
-            if (Environment.isExternalStorageManager()){
+            if (Environment.isExternalStorageManager()) {
                 //Manage External Storage Permission is granted
-                Log.d(TAG, "storageActivityResultLauncher: Manage External Storage Permission is granted")
+                Log.d(
+                    TAG,
+                    "storageActivityResultLauncher: Manage External Storage Permission is granted"
+                )
                 val checkboxPermission = findViewById<CheckBox>(R.id.checkbox_permission)
                 checkboxPermission.isChecked = true
-            }
-            else{
+            } else {
                 //Manage External Storage Permission is denied....
-                Log.d(TAG, "storageActivityResultLauncher: Manage External Storage Permission is denied....")
+                Log.d(
+                    TAG,
+                    "storageActivityResultLauncher: Manage External Storage Permission is denied...."
+                )
                 toast("Manage External Storage Permission is denied....")
             }
-        }
-        else{
+        } else {
             //Android is below 11(R)
         }
     }
@@ -184,21 +212,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun toast(message: String){
+    private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun trimMp3(inputPath: String,startTime: String, endTime: String, onTrimComplete: () -> Unit) {
+    data class TrimRequest(val startTime: String, val endTime: String)
+
+    private fun trimMp3List(
+        inputPath: String,
+        requests: List<TrimRequest>,
+        onTrimCompleted: () -> Unit
+    ) {
+        requests.listIterator().forEach {
+            trimMp3(inputPath = inputPath, startTime = it.startTime, endTime = it.endTime) {
+                //do handle when a trim file finished
+            }
+        }
+        onTrimCompleted();
+    }
+
+    private fun trimMp3(
+        inputPath: String,
+        startTime: String,
+        endTime: String,
+        onTrimComplete: () -> Unit
+    ) {
         // Extract the file name from the input path and append '_trimmed'
         val fileNameWithoutExtension = inputPath.substringBeforeLast(".")
         val fileExtension = inputPath.substringAfterLast(".", "")
-        val outputFileName = "${fileNameWithoutExtension}_trimmed.$fileExtension"
+        val outputFileName =
+            "${fileNameWithoutExtension}_${startTime}_${endTime}_trimmed.$fileExtension"
 
         val endTimeInSecond = convertTimeToSecond(endTime);
         val startTimeInSecond = convertTimeToSecond(startTime);
         val duration = (endTimeInSecond - startTimeInSecond).toString()
 
-        // FFmpeg command to trim the MP3
 
         // Delete the output file if it exists
         val outputFile = File(outputFileName)
@@ -211,17 +259,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // FFmpeg command to trim the MP3
         val command = "-i $inputPath -ss $startTime -t $duration -acodec copy $outputFileName"
-
         Log.d(TAG, "trimMp3: command $command")
         FFmpegKit.executeAsync(command) { session ->
             val returnCode = session.returnCode
 
             Handler(Looper.getMainLooper()).post {
                 if (ReturnCode.isSuccess(returnCode)) {
-                    Toast.makeText(this, "MP3 trimmed successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "MP3 trimmed: ${startTime}:${endTime} successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
-                    Toast.makeText(this, "Error trimming MP3, errorCode: $returnCode", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Error trimming MP3 ${startTime}:${endTime}, errorCode: $returnCode",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 onTrimComplete() // Call the completion callback after processing
             }
@@ -279,18 +335,21 @@ class MainActivity : AppCompatActivity() {
                 //Convert the time to total seconds
                 hours * 3600 + minutes * 60 + seconds
             }
+
             2 -> {
                 val minutes = timeParts[0].toInt()
                 val seconds = timeParts[1].toInt()
 
                 //Convert the time to total seconds
-                 minutes * 60 + seconds
+                minutes * 60 + seconds
             }
+
             1 -> {
                 val seconds = timeParts[0].toInt()
                 seconds
             }
-            else -> throw  IllegalArgumentException("Invalid time format")
+
+            else -> throw IllegalArgumentException("Invalid time format")
         }
     }
 
@@ -310,6 +369,7 @@ fun getRealPathFromUri(context: Context, uri: Uri): String? {
                 }
                 // Handle non-primary volumes (SD cards, etc.) here if necessary
             }
+
             isDownloadsDocument(uri) -> {
                 val id = DocumentsContract.getDocumentId(uri)
                 if (id.startsWith("raw:")) {
@@ -321,6 +381,7 @@ fun getRealPathFromUri(context: Context, uri: Uri): String? {
                 )
                 return getDataColumn(context, contentUri, null, null)
             }
+
             isMediaDocument(uri) -> {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":")
@@ -359,7 +420,15 @@ private fun getDataColumn(
     val column = "_data"
     val projection = arrayOf(column)
     try {
-        cursor = uri?.let { context.contentResolver.query(it, projection, selection, selectionArgs, null) }
+        cursor = uri?.let {
+            context.contentResolver.query(
+                it,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )
+        }
         if (cursor != null && cursor.moveToFirst()) {
             val index = cursor.getColumnIndexOrThrow(column)
             return cursor.getString(index)

@@ -43,4 +43,14 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="output_file">output file:</string>
+    <string name="no_file_selected">No file selected</string>
+    <string name="choose_audio_file">Choose Audio File</string>
+    <string name="storage_permission_granted">Storage Permission Granted</string>
+    <string name="add_button_string">+Add</string>
+    <string name="start_button">Start</string>
+    <string name="input_format">Support input format \nhh:mm:ss | mm:ss | ss</string>
+    <string name="end_time">End Time</string>
+    <string name="start_time">Start Time</string>
+    <string name="remove">Remove</string>
 </resources>

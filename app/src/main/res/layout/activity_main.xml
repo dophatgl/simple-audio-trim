@@ -11,26 +11,26 @@
         android:id="@+id/checkbox_permission"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Storage Permission Granted"
         android:checked="false"
         android:enabled="false"
-        android:padding="10dp" />
+        android:padding="10dp"
+        android:text="@string/storage_permission_granted" />
 
     <!-- Button to choose the audio file -->
     <Button
         android:id="@+id/button_choose_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose Audio File"
-        android:layout_marginTop="20dp" />
+        android:layout_marginTop="20dp"
+        android:text="@string/choose_audio_file" />
 
     <!-- TextView for displaying selected file path -->
     <TextView
         android:id="@+id/textview_file_path"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No file selected"
         android:layout_marginTop="10dp"
+        android:text="@string/no_file_selected"
         android:textSize="14sp" />
 
     <!-- Start Time Input Field with Label -->
@@ -39,66 +39,62 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="output file: "
+        android:text="@string/output_file"
         android:textSize="14sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start Time (hh:mm:ss | mm:ss | ss):"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="8dp" />
-
-        <EditText
-            android:id="@+id/edittext_start_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="Enter Start Time"
-            android:inputType="time" />
-    </LinearLayout>
-
-    <!-- End Time Input Field with Label -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="End Time (hh:mm:ss | mm:ss | ss):"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="8dp" />
-
-        <EditText
-            android:id="@+id/edittext_end_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="Enter End Time"
-            android:inputType="time" />
-    </LinearLayout>
 
     <!-- Start Button to begin trimming -->
     <Button
         android:id="@+id/button_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start"
-        android:layout_marginTop="30dp"
-        android:layout_gravity="center_horizontal" />
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="@string/start_button" />
 
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="20dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="@string/input_format"
+            android:textStyle="bold" />
+
+
+        <Button
+            android:id="@+id/addItemButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_button_string" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/itemContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
 
 </LinearLayout>
